@@ -1,15 +1,53 @@
-
+# 🔹 Ignorowanie wirtualnego środowiska (venv)
+.venv/
 venv/
 env/
 
-
+# 🔹 Pliki tymczasowe i cache Pythona
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
-
-.vscode/
-
-
-.DS_Store
+# 🔹 Pliki logów i tymczasowe
+*.log
+*.tmp
+*.swp
+*.swo
+*.DS_Store
 Thumbs.db
+
+# 🔹 Pliki konfiguracyjne edytorów i IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# 🔹 Pliki zależności (ALE NIE `requirements.txt`)
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# 🔹 Pliki testowe i raporty
+htmlcov/
+.coverage
+pytest_cache/
+
+# 🔹 Pliki Jupyter Notebook
+.ipynb_checkpoints/
+
+# 🔹 Pliki kompilacji C/C++ (jeśli używasz np. Cython)
+*.so
+*.o
+*.a
+*.dll
+*.dylib
+*.exe
+
+# 🔹 Pliki środowiskowe (tajne klucze, konfiguracja)
+.env
+*.env
+
+# 🔹 Pliki baz danych SQLite (jeśli używasz SQLite)
+*.sqlite3
+db.sqlite3
+
