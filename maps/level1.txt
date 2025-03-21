@@ -1,0 +1,8 @@
+grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass
+start,path,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass
+grass,path,grass,grass,path,path,path,path,grass,grass,grass,grass
+grass,path,grass,grass,path,grass,grass,path,grass,path,path,finish
+grass,path,grass,grass,path,grass,grass,path,grass,path,grass,grass
+grass,path,grass,grass,path,grass,grass,path,path,path,grass,grass
+grass,path,path,path,path,grass,grass,grass,grass,grass,grass,grass
+grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass

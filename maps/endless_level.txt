@@ -1,0 +1,12 @@
+grass,grass,grass,grass,grass,grass,start,mountain,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass
+grass,grass,grass,grass,grass,grass,path,mountain,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass
+grass,grass,grass,path,path,path,path,path,grass,grass,grass,grass,grass,forest,grass,forest,grass,grass
+grass,grass,forest,path,grass,grass,grass,path,grass,grass,grass,grass,path,path,path,path,path,finish
+grass,grass,grass,marsh,grass,grass,grass,path,path,grass,grass,grass,path,grass,grass,grass,grass,grass
+grass,grass,marsh,marsh,grass,grass,grass,grass,path,path,path,path,path,mountain,mountain,mountain,mountain,mountain
+grass,forest,path,grass,grass,forest,grass,forest,path,grass,forest,grass,grass,grass,grass,grass,grass,grass
+grass,forest,path,grass,grass,grass,forest,grass,path,forest,forest,grass,grass,grass,marsh,path,path,finish
+grass,grass,path,grass,grass,grass,grass,forest,path,grass,forest,grass,grass,grass,marsh,grass,grass,grass
+start,path,path,path,path,path,path,path,path,path,path,path,marsh,marsh,marsh,grass,grass,grass
+grass,grass,mountain,mountain,mountain,mountain,grass,forest,grass,forest,grass,grass,grass,grass,grass,grass,grass,grass
+grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass

@@ -1,0 +1,8 @@
+grass,grass,grass,mountain,mountain,grass,grass,grass,grass,grass,grass,grass
+grass,grass,marsh,path,path,path,path,grass,grass,grass,path,finish
+grass,grass,marsh,grass,grass,forest,path,grass,grass,grass,path,grass
+grass,grass,path,path,grass,forest,path,grass,grass,grass,path,grass
+grass,grass,forest,path,grass,forest,path,marsh,marsh,grass,path,mountain
+grass,grass,forest,path,grass,grass,mountain,mountain,marsh,grass,path,mountain
+grass,path,path,path,grass,grass,grass,mountain,marsh,path,path,grass
+grass,start,grass,grass,grass,grass,grass,grass,grass,grass,grass,grass
