@@ -1,9 +1,11 @@
 import pygame as pg
 from tiles import Tile
 import constant as cs
+from enemy_data import ENEMY_SPAWN_DATA
 
 class Map:
     def __init__(self, tile_size=cs.TILE_SIZE):
+        self.level=1
         self.tile_size = tile_size
         self.tiles = []
         self.tile_images = {}
@@ -11,6 +13,8 @@ class Map:
         self.tile_group = pg.sprite.Group()
         self.width = 0  # Will be determined by loaded map
         self.height = 0  # Will be determined by loaded map
+        self.enemy_list=[]
+        self.spawned_enemy=0
         
     def load_tile_images(self):
         # Load all tile images from your tiles directory
@@ -23,8 +27,16 @@ class Map:
                 print(f"Could not load image for {tile_type}")
                 # Create a colored placeholder
                 placeholder = pg.Surface((self.tile_size, self.tile_size))
-                self.tile_images[tile_type] = placeholder.fill((0,0,0))
-    
+                placeholder.fill((0, 0, 0))
+                self.tile_images[tile_type] = placeholder
+
+    def process_enemies(self):
+        enemies=ENEMY_SPAWN_DATA[self.level-1]
+        for enemy_type in enemies:
+            enemies_to_spawn=enemies[enemy_type]
+            for enemy in range(enemies_to_spawn):
+                self.enemy_list.append(enemy_type)
+        
     def load_from_file(self, filename):
         # Clear existing tiles
         self.tiles = []
