@@ -3,6 +3,7 @@ import pygame as pg
 from pathfinding import a_star_search
 import math
 from enemy_data import ENEMY_DATA
+import constant as cs
 
 class Enemy(pg.sprite.Sprite):
     def __init__(self, map_obj,enemy_type):
@@ -43,8 +44,8 @@ class Enemy(pg.sprite.Sprite):
                 self.enemy_images[enemy_type] = pg.image.load(img_path).convert_alpha()
             except:
                 print(f"Could not load image for {enemy_type}")
-                # Create a colored placeholder
-                placeholder = pg.Surface((self.tile_size, self.tile_size))
+                # Create a colored placeholder doesnt work
+                placeholder = pg.Surface((cs.TILE_SIZE,cs.TILE_SIZE))
                 placeholder.fill((0, 0, 0))
                 self.enemy_images[enemy_type] = placeholder
     
