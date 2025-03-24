@@ -1,6 +1,6 @@
 TURRET_DATA = [
     {
-        "range":90,
+        "range":200,
         "attack_speed":1500
     },
     {

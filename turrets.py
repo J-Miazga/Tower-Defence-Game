@@ -1,6 +1,7 @@
 import pygame as pg
 import constant as cs
 from turret_data import TURRET_DATA
+import math
 
 class Turret(pg.sprite.Sprite):
     def __init__(self,pos,tower_type,tile_pos=None):
@@ -25,6 +26,12 @@ class Turret(pg.sprite.Sprite):
         self.range_rect=self.range_image.get_rect()
         self.range_rect.center=self.rect.center
         self.selected=False
+        
+        
+        self.target = None
+        self.last_fire_time = 0
+        
+        
               
     def load_tower_images(self):
         # Load all enemy images from your tiles directory
@@ -50,6 +57,68 @@ class Turret(pg.sprite.Sprite):
             return 2  # Using same data as tower_1 for now, you can add more in turret_data.py
         else:
             return 0  # Default to first turret data
+    
+    def find_target(self, enemy_group):
+        """Find the enemy closest to the finish line within range"""
+        closest_enemy = None
+        closest_distance = float('inf')
+        
+        for enemy in enemy_group:
+           if enemy.hp>0: # Calculate distance to enemy
+                distance = math.sqrt(
+                    (enemy.rect.centerx - self.rect.centerx)**2 + 
+                    (enemy.rect.centery - self.rect.centery)**2
+                )
+                
+                # Check if enemy is within range
+                if distance <= self.range:
+                    # Use path index to determine closeness to finish
+                    # Lower path index means closer to finish
+                    if closest_enemy is None or enemy.current_path_index > closest_enemy.current_path_index:
+                        closest_enemy = enemy
+                        closest_distance = distance
+        
+        return closest_enemy
+
+    def calculate_rotation_angle(self, target):
+        """Calculate the correct rotation angle"""
+        # Calculate the vector from turret to target
+        dx = target.rect.centerx - self.rect.centerx
+        dy = target.rect.centery - self.rect.centery
+        
+        # Calculate angle in radians
+        # Use atan2 to get the angle, then convert to degrees
+        # Subtract 90 to align with the initial upward orientation
+        angle = math.degrees(math.atan2(-dy, dx))-90
+        
+        return angle
+        
+    def update(self, enemy_group):
+        """Update turret targeting and firing"""
+        current_time = pg.time.get_ticks()
+        
+        # Find the target
+        self.target = self.find_target(enemy_group)
+        
+        # Check if enough time has passed since last fire
+        if current_time - self.last_fire_time >= self.attack_speed:
+            # If target found, rotate and fire
+            if self.target:
+                # Calculate rotation angle
+                angle = self.calculate_rotation_angle(self.target)
+                
+                # Rotate image
+                self.image = pg.transform.rotate(self.original_image, angle)
+                self.rect = self.image.get_rect(center=self.rect.center)
+                
+                # Fire at the target
+                #print(f"{self.tower_type} turret fired at enemy. Enemy HP: {self.target.hp}")
+                
+                # Damage the enemy
+                self.target.hp -= 1  # Basic damage, you can modify this later
+                
+                # Update last fire time
+                self.last_fire_time = current_time
     
     def upgrade(self):
         self.upgrade_turret+=1

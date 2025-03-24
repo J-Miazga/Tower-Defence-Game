@@ -1,6 +1,6 @@
 ENEMY_SPAWN_DATA =[
     {
-        "normal":15,
+        "normal":1,
         "heavy":0,
         "fast":0,
         "boss":0,

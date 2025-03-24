@@ -1,5 +1,6 @@
 # enemies.py
 import pygame as pg
+from map import Map
 from pathfinding import a_star_search
 import math
 from enemy_data import ENEMY_DATA
@@ -33,7 +34,7 @@ class Enemy(pg.sprite.Sprite):
             )
             
             # Calculate path
-            self.calculate_path()
+            self.calculate_path(map_obj)
     
     def load_enemy_images(self):
         # Load all enemy images from your tiles directory
@@ -57,15 +58,15 @@ class Enemy(pg.sprite.Sprite):
                     return (x, y)
         return None
     
-    def calculate_path(self):
+    def calculate_path(self,map):
         """Calculate a path from start to finish"""
         if self.start_pos and self.finish_pos:
             self.path = a_star_search(self.map, self.start_pos, self.finish_pos)
             self.current_path_index = 0
             if self.path:
-                self.set_next_target()
+                self.set_next_target(map)
     
-    def set_next_target(self):
+    def set_next_target(self,map):
         """Set the next target position from the path"""
         if self.current_path_index < len(self.path):
             next_tile = self.path[self.current_path_index]
@@ -75,9 +76,10 @@ class Enemy(pg.sprite.Sprite):
             )
             self.current_path_index += 1
         else:
+            map.hp-=1
             self.kill()
     
-    def move(self):
+    def move(self,map):
         """Move towards the current target"""
         if self.current_target:
             dx = self.current_target[0] - self.rect.centerx
@@ -100,7 +102,7 @@ class Enemy(pg.sprite.Sprite):
                 # Snap to target position
                 self.rect.center = self.current_target
                 # Set next target
-                self.set_next_target()
+                self.set_next_target(map)
     
     def rotate(self):
         #Rotate the enemy to face the direction of movement
@@ -118,5 +120,8 @@ class Enemy(pg.sprite.Sprite):
                 # Update rect to maintain the center position
                 self.rect = self.image.get_rect(center=self.rect.center)
     
-    def update(self):
-        self.move()
+    def update(self,map):
+        self.move(map)
+        if self.hp <=0:
+            map.money+=cs.KILL_REWARD
+            self.kill()

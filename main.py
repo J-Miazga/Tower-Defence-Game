@@ -24,6 +24,7 @@ if not map_loaded:
 screen=pg.display.set_mode((game_map.width*cs.TILE_SIZE+cs.SIDE_PANEL,game_map.height*cs.TILE_SIZE))
 game_map.process_enemies()
 
+text_font=pg.font.SysFont("Consolas",24,bold=True)
 
 enemy_group=pg.sprite.Group()
 turret_group=pg.sprite.Group()
@@ -59,6 +60,9 @@ def update_turret_button_colors():
     elif selected_turret_type == "tower_3":
         turret3_button.button_color = SELECTED_BUTTON_COLOR
 
+def draw_text(text,font,text_col,x,y):
+    img=font.render(text,True,text_col)
+    screen.blit(img,(x,y))
 # Set initial button colors
 update_turret_button_colors()
 
@@ -67,13 +71,17 @@ while run:
     
     clock.tick(cs.FPS)
     screen.fill("grey100")
-    enemy_group.update()
+    enemy_group.update(game_map)
+    for turret in turret_group:
+        turret.update(enemy_group)
     
     game_map.draw(screen)
-    enemy_group.draw(screen)
     for turret in turret_group:
         turret.draw(screen)
+    enemy_group.draw(screen)
     
+    draw_text(str(game_map.hp),text_font,"black",game_map.width*cs.TILE_SIZE+10,0)
+    draw_text(str(game_map.money),text_font,"black",game_map.width*cs.TILE_SIZE+100,0)
     buy_turret_button.draw(screen)
     
     if placing_turrets:  
@@ -115,7 +123,7 @@ while run:
         if cancel_button.is_clicked(event):
             placing_turrets=False
         
-        if upgrade_button.is_clicked(event) and selected_turret and selected_turret.upgrade_turret < cs.TURRET_MAX_LEVEL and not placing_turrets:
+        if upgrade_button.is_clicked(event) and selected_turret and selected_turret.upgrade_turret < cs.TURRET_MAX_LEVEL and not placing_turrets and game_map.money>=cs.UPGRADE_COST:
             selected_turret.upgrade()
         
         
@@ -160,9 +168,10 @@ while run:
                                 break
                         
                         # Place turret if none exists at this position
-                        if not turret_exists:
+                        if not turret_exists and game_map.money>=cs.BUY_COST:
                             turret = Turret(tile_center, selected_turret_type, tile_pos=(clicked_tile.rect.x // cs.TILE_SIZE, clicked_tile.rect.y // cs.TILE_SIZE))
                             turret_group.add(turret)
+                            game_map.money-=cs.BUY_COST
             
     pg.display.flip()
 pg.quit()

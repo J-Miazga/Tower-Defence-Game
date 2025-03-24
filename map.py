@@ -11,6 +11,8 @@ class Map:
         self.tile_images = {}
         self.load_tile_images()
         self.tile_group = pg.sprite.Group()
+        self.hp=cs.HEALTH
+        self.money=cs.MONEY
         self.width = 0  # Will be determined by loaded map
         self.height = 0  # Will be determined by loaded map
         self.enemy_list=[]
