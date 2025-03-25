@@ -1,42 +1,42 @@
 ENEMY_SPAWN_DATA =[
     {
-        "normal":1,
+        "normal":5,
         "heavy":0,
         "fast":0,
         "boss":0,
     },
     {
-        "normal":15,
-        "heavy":5,
+        "normal":5,
+        "heavy":0,
         "fast":0,
         "boss":0,
     },
     {
-        "normal":15,
+        "normal":5,
         "heavy":0,
-        "fast":10,
+        "fast":0,
         "boss":0,
     },
     {
-         "normal":15,
+        "normal":3,
         "heavy":0,
         "fast":0,
-        "boss":1,
+        "boss":0,
     }    
 ]
 
 ENEMY_DATA ={
     "normal":{
+        "hp":5,
+        "speed":2
+    },
+     "heavy":{
         "hp":10,
         "speed":1
     },
-     "heavy":{
-        "hp":20,
-        "speed":0.5
-    },
       "fast":{
         "hp":10,
-        "speed":2
+        "speed":4
     },
        "boss":{
         "hp":50,

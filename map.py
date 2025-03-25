@@ -17,6 +17,8 @@ class Map:
         self.height = 0  # Will be determined by loaded map
         self.enemy_list=[]
         self.spawned_enemy=0
+        self.enemies_killed=0
+        self.enemies_missed=0
         
     def load_tile_images(self):
         # Load all tile images from your tiles directory
@@ -32,13 +34,23 @@ class Map:
                 placeholder.fill((0, 0, 0))
                 self.tile_images[tile_type] = placeholder
 
+    def level_finished(self):
+        if self.enemies_killed+self.enemies_missed==len(self.enemy_list):
+            return True
+    
     def process_enemies(self):
         enemies=ENEMY_SPAWN_DATA[self.level-1]
         for enemy_type in enemies:
             enemies_to_spawn=enemies[enemy_type]
             for enemy in range(enemies_to_spawn):
                 self.enemy_list.append(enemy_type)
-        
+    
+    def reset_level(self):
+        self.enemies_killed=0
+        self.enemies_missed=0
+        self.enemy_list=[]  
+        self.spawned_enemy=0  
+    
     def load_from_file(self, filename):
         # Clear existing tiles
         self.tiles = []

@@ -20,6 +20,7 @@ class Enemy(pg.sprite.Sprite):
         self.image = self.enemy_images.get(enemy_type)
         self.rect = self.image.get_rect()
         self.original_image = self.image.copy()
+       
         
         
         # Find start and finish tiles
@@ -58,6 +59,7 @@ class Enemy(pg.sprite.Sprite):
                     return (x, y)
         return None
     
+    
     def calculate_path(self,map):
         """Calculate a path from start to finish"""
         if self.start_pos and self.finish_pos:
@@ -77,6 +79,7 @@ class Enemy(pg.sprite.Sprite):
             self.current_path_index += 1
         else:
             map.hp-=1
+            map.enemies_missed+=1
             self.kill()
     
     def move(self,map):
@@ -123,5 +126,6 @@ class Enemy(pg.sprite.Sprite):
     def update(self,map):
         self.move(map)
         if self.hp <=0:
+            map.enemies_killed+=1
             map.money+=cs.KILL_REWARD
             self.kill()

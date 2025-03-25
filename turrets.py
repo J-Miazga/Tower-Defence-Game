@@ -47,6 +47,9 @@ class Turret(pg.sprite.Sprite):
                 placeholder.fill((0, 0, 0))
                 self.turret_images[tower_type] = placeholder
     
+    def delete_turret(self):
+        self.kill()
+    
     def get_turret_data_index(self):
         # Map turret types to their data indices
         if self.tower_type == "tower_1":
