@@ -15,8 +15,9 @@ class Turret(pg.sprite.Sprite):
         self.rect.center=pos
         self.upgrade_turret=1
         self.turret_index = self.get_turret_data_index()
-        self.range=TURRET_DATA[self.upgrade_turret-1].get("range")
-        self.attack_speed=TURRET_DATA[self.upgrade_turret-1].get("attack_speed")
+        self.range=TURRET_DATA[self.turret_index].get("range")
+        self.attack_speed=TURRET_DATA[self.turret_index].get("attack_speed")
+        self.damage=TURRET_DATA[self.turret_index].get("damage")
         self.tile_pos = tile_pos
         self.range_image=pg.Surface((self.range*2,self.range*2))
         self.range_image.fill((0,0,0))
@@ -55,9 +56,9 @@ class Turret(pg.sprite.Sprite):
         if self.tower_type == "tower_1":
             return 0
         elif self.tower_type == "tower_2":
-            return 1
+            return 2
         elif self.tower_type == "tower_3":
-            return 2  # Using same data as tower_1 for now, you can add more in turret_data.py
+            return 4  # Using same data as tower_1 for now, you can add more in turret_data.py
         else:
             return 0  # Default to first turret data
     
@@ -118,16 +119,18 @@ class Turret(pg.sprite.Sprite):
                 #print(f"{self.tower_type} turret fired at enemy. Enemy HP: {self.target.hp}")
                 
                 # Damage the enemy
-                self.target.hp -= 1  # Basic damage, you can modify this later
-                
+                self.target.hp -= self.damage  # Basic damage, you can modify this later
+                print(self.damage)
                 # Update last fire time
                 self.last_fire_time = current_time
     
     def upgrade(self):
         self.upgrade_turret+=1
         self.turret_index = self.get_turret_data_index()
-        self.range=TURRET_DATA[self.turret_index].get("range")
-        self.attack_speed=TURRET_DATA[self.turret_index].get("attack_speed")
+        self.range=TURRET_DATA[self.turret_index+1].get("range")
+        self.attack_speed=TURRET_DATA[self.turret_index+1].get("attack_speed")
+        self.damage=TURRET_DATA[self.turret_index+1].get("damage")
+        print(self.range,self.attack_speed,self.damage)
         self.range_image=pg.Surface((self.range*2,self.range*2))
         self.range_image.fill((0,0,0))
         self.range_image.set_colorkey((0,0,0))
