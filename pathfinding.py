@@ -4,7 +4,7 @@ def heuristic(a, b):
     # Manhattan distance on a square grid
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-def a_star_search(map_obj, start, goal):
+def a_star_search(map_obj, start, goal,enemy_type):
     """
     A* pathfinding algorithm restricted to path and marsh tiles
     """
@@ -68,7 +68,12 @@ def a_star_search(map_obj, start, goal):
             
             # Calculate movement cost based on tile type
             if tile.tile_type == 'marsh':
-                movement_cost = 2.0  # Marsh is slower to traverse
+                if enemy_type == 'fast':
+                    # Fast enemies treat marsh as normal path
+                    movement_cost = 1.0
+                else:
+                    # Other enemy types are slowed by 50% on marsh
+                    movement_cost = 2.0
             else:
                 movement_cost = 1.0  # Normal speed on paths
             

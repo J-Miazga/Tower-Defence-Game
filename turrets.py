@@ -2,6 +2,8 @@ import pygame as pg
 import constant as cs
 from turret_data import TURRET_DATA
 import math
+from logger import game_logger
+
 
 class Turret(pg.sprite.Sprite):
     def __init__(self,pos,tower_type,tile_pos=None):
@@ -31,8 +33,7 @@ class Turret(pg.sprite.Sprite):
         
         self.target = None
         self.last_fire_time = 0
-        
-        
+
               
     def load_tower_images(self):
         # Load all enemy images from your tiles directory
@@ -61,6 +62,59 @@ class Turret(pg.sprite.Sprite):
             return 4  # Using same data as tower_1 for now, you can add more in turret_data.py
         else:
             return 0  # Default to first turret data
+    
+    def check_line_of_sight(self, map_obj, enemy):
+        """Check if there's a mountain blocking the line of sight"""
+        # Get turret and enemy tile coordinates
+        turret_tile_x = self.rect.centerx // map_obj.tile_size
+        turret_tile_y = self.rect.centery // map_obj.tile_size
+        enemy_tile_x = enemy.rect.centerx // map_obj.tile_size
+        enemy_tile_y = enemy.rect.centery // map_obj.tile_size
+        
+        # Use Bresenham's line algorithm to check tiles between turret and enemy
+        def get_line_tiles(x0, y0, x1, y1):
+            tiles = []
+            dx = abs(x1 - x0)
+            dy = abs(y1 - y0)
+            x, y = x0, y0
+            sx = 1 if x0 < x1 else -1
+            sy = 1 if y0 < y1 else -1
+            
+            if dx > dy:
+                err = dx / 2.0
+                while x != x1:
+                    tiles.append((x, y))
+                    err -= dy
+                    if err < 0:
+                        y += sy
+                        err += dx
+                    x += sx
+            else:
+                err = dy / 2.0
+                while y != y1:
+                    tiles.append((x, y))
+                    err -= dx
+                    if err < 0:
+                        x += sx
+                        err += dy
+                    y += sy
+            
+            tiles.append((x1, y1))
+            return tiles
+        
+        # Get tiles between turret and enemy
+        line_tiles = get_line_tiles(turret_tile_x, turret_tile_y, enemy_tile_x, enemy_tile_y)
+        
+        # Skip first and last tiles (turret and enemy positions)
+        for tile_x, tile_y in line_tiles[1:-1]:
+            # Check if tile is within map bounds
+            if 0 <= tile_x < map_obj.width and 0 <= tile_y < map_obj.height:
+                # If any tile in the line is a mountain, block line of sight
+                if map_obj.tiles[tile_y][tile_x].tile_type == 'mountain':
+                    return False
+        
+        return True
+    
     
     def find_target(self, enemy_group):
         """Find the enemy closest to the finish line within range"""
@@ -115,17 +169,17 @@ class Turret(pg.sprite.Sprite):
                 self.image = pg.transform.rotate(self.original_image, angle)
                 self.rect = self.image.get_rect(center=self.rect.center)
                 
-                # Fire at the target
-                #print(f"{self.tower_type} turret fired at enemy. Enemy HP: {self.target.hp}")
                 
-                # Damage the enemy
-                self.target.hp -= self.damage  # Basic damage, you can modify this later
-                print(self.damage)
+                if self.check_line_of_sight(self.target.map, self.target):
+                    # Fire at the target
+                    self.target.hp -= self.damage
+                    game_logger.log(f"{self.tower_type} hit enemy at {self.target.rect.center}, remaining HP: {self.target.hp}","info")
                 # Update last fire time
                 self.last_fire_time = current_time
     
     def upgrade(self):
         self.upgrade_turret+=1
+        self.tower_type=f"{self.tower_type}_upgrade"
         self.turret_index = self.get_turret_data_index()
         self.range=TURRET_DATA[self.turret_index+1].get("range")
         self.attack_speed=TURRET_DATA[self.turret_index+1].get("attack_speed")
@@ -138,11 +192,13 @@ class Turret(pg.sprite.Sprite):
         self.range_image.set_alpha(100)
         self.range_rect=self.range_image.get_rect()
         self.range_rect.center=self.rect.center
-        self.image=self.turret_images[f"{self.tower_type}_upgrade"]
+        self.image=self.turret_images[self.tower_type]
         self.original_image=self.image.copy()
 
     def draw(self,surface):
         surface.blit(self.image,self.rect)
         if self.selected:
             surface.blit(self.range_image,self.range_rect)
+   
+
    

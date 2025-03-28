@@ -14,7 +14,7 @@ ENEMY_SPAWN_DATA =[
     {
         "normal":5,
         "heavy":3,
-        "fast":3,
+        "fast":0,
         "boss":1,
     },
     {
@@ -27,12 +27,12 @@ ENEMY_SPAWN_DATA =[
 
 ENEMY_DATA ={
     "normal":{
-        "hp":5,
+        "hp":10,
         "speed":2
     },
      "heavy":{
         "hp":10,
-        "speed":1
+        "speed":2
     },
       "fast":{
         "hp":3,
@@ -40,6 +40,6 @@ ENEMY_DATA ={
     },
        "boss":{
         "hp":50,
-        "speed":1
+        "speed":2
     }    
 }

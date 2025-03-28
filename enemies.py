@@ -20,7 +20,7 @@ class Enemy(pg.sprite.Sprite):
         self.image = self.enemy_images.get(enemy_type)
         self.rect = self.image.get_rect()
         self.original_image = self.image.copy()
-       
+        self.enemy_type=enemy_type
         
         
         # Find start and finish tiles
@@ -63,7 +63,7 @@ class Enemy(pg.sprite.Sprite):
     def calculate_path(self,map):
         """Calculate a path from start to finish"""
         if self.start_pos and self.finish_pos:
-            self.path = a_star_search(self.map, self.start_pos, self.finish_pos)
+            self.path = a_star_search(self.map, self.start_pos, self.finish_pos,self.enemy_type)
             self.current_path_index = 0
             if self.path:
                 self.set_next_target(map)
@@ -90,8 +90,24 @@ class Enemy(pg.sprite.Sprite):
             
             # Calculate direction
             distance = max(1, (dx**2 + dy**2)**0.5)  # Avoid division by zero
-            dx = dx / distance * self.speed
-            dy = dy / distance * self.speed
+            # current_tile = map.tiles[self.current_path_index - 1][0], map.tiles[self.current_path_index - 1][1]
+            # movement_multiplier = 1.0
+            
+            # # Slow down non-fast enemies on marsh tiles
+            # if current_tile.tile_type == 'marsh' and self.enemy_type != 'fast':
+            #     movement_multiplier = 0.5
+            current_tile_x, current_tile_y = self.path[self.current_path_index - 1]
+            current_tile = map.tiles[current_tile_y][current_tile_x]
+            
+            movement_multiplier = 1.0
+            
+            # Slow down non-fast enemies on marsh tiles
+            if current_tile.tile_type == 'marsh' and self.enemy_type != 'fast':
+                movement_multiplier = 0.5
+            
+            # Adjust movement
+            dx = dx / distance * self.speed * movement_multiplier
+            dy = dy / distance * self.speed * movement_multiplier
             
             self.rotate()
             # Move

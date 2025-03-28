@@ -6,12 +6,8 @@ from tiles import Tile
 from turrets import Turret
 from buttons import Button
 from enemy_data import ENEMY_SPAWN_DATA
-from story_and_missions import GameUIManager
-
-pg.init()
-
-font = pg.font.SysFont(None, 36)
-
+from story_and_missions import StoryScene,MissionManager
+from logger import game_logger
 
 def draw_text(text, font, text_col, x, y, surface):
     img = font.render(text, True, text_col)
@@ -35,7 +31,7 @@ def show_mode_selection_menu():
         menu_screen.fill("grey100")
         
         # Draw title
-        draw_text("Select Game Mode", title_font, "black", 80, 50, menu_screen)
+        draw_text("Select Game Mode", title_font, "black", 50, 50, menu_screen)
         
         # Draw buttons
         endless_button.draw(menu_screen)
@@ -55,13 +51,11 @@ def show_mode_selection_menu():
         
         pg.display.flip()
 
-def main(game_mode):
+def main(game_mode,game_map,mission):
     clock = pg.time.Clock()
-    screen = pg.display.set_mode((1,1))
-    pg.display.set_caption("Tower Defense Game")
     last_enemy_spawn = pg.time.get_ticks()
 
-    game_map = Map()
+    #game_map = Map()
     if game_mode == 'endless':
         map_loaded = game_map.load_from_file('maps/endless_level.txt')
         game_map.level=4
@@ -69,17 +63,19 @@ def main(game_mode):
         map_loaded = game_map.load_from_file('maps/level1.txt')
 
     if not map_loaded:
-        print("Failed to load map!")
+        game_logger.log("Failed to load map!","error")
         return
 
     screen = pg.display.set_mode((game_map.width*cs.TILE_SIZE+cs.SIDE_PANEL, game_map.height*cs.TILE_SIZE))
-    ui = GameUIManager(screen, font)
-    ui.show_popup("Dowództwo do wszystkich jednostek! Wróg przekroczył granicę...")
+    pg.display.set_caption("Tower Defense Game")
+    plot=StoryScene(screen,font)
+    plot.draw("Dowództwo do wszystkich jednostek! Wróg przekroczył granicę i przemieszcza się w kierunku naszej bazy. Rozstawcie wieżyczki i powstrzymajcie ich za wszelką cenę. Jeśli padniemy tutaj, reszta kraju nie ma szans.")
 
     game_map.process_enemies()
     text_font = pg.font.SysFont("Consolas", 24, bold=True)
     enemy_group = pg.sprite.Group()
     turret_group = pg.sprite.Group()
+  
 
     DEFAULT_BUTTON_COLOR = (50, 150, 50)
     SELECTED_BUTTON_COLOR = (100, 100, 255)
@@ -104,7 +100,8 @@ def main(game_mode):
 
     cursor_x, cursor_y = 0, 0
 
-    ui.set_mission("Upgrade Tower")
+    mission.set_mission("Upgrade Tower")
+    
 
     run = True
     while run:
@@ -134,8 +131,8 @@ def main(game_mode):
                 turret.draw(screen)
             enemy_group.draw(screen)
 
-            if not ui.check_turret_upgrade_mission(turret_group):
-                ui.render_mission()
+            if not mission.check_turret_upgrade_mission(turret_group):
+                mission.render_mission(screen,font)
             else:
                 game_map.money += 300
 
@@ -170,23 +167,23 @@ def main(game_mode):
                 level_started = False
                 if game_map.level==1:
                     map_loaded = game_map.load_from_file('maps/level2.txt')
-                    ui.set_mission("Upgrade Tower")
+                    mission.set_mission("Upgrade Tower")
                     for turret in turret_group:
                         turret.delete_turret()
                     game_map.level += 1
-                    ui.show_popup("Zwiad meldował większe siły niż przewidywaliśmy. Wróg zaczyna używać ciężkiego sprzętu. Nasze wieżyczki z minigunami dają radę, ale to już nie są zwykłe potyczki. To wojna na pełną skalę.")
+                    plot.draw("Zwiad meldował większe siły niż przewidywaliśmy. Wróg zaczyna używać ciężkiego sprzętu. Nasze wieżyczki z minigunami dają radę, ale to już nie są zwykłe potyczki. To wojna na pełną skalę.")
                 elif game_map.level==2:
                     map_loaded = game_map.load_from_file('maps/level3.txt')
-                    ui.set_mission("Upgrade Tower")
+                    mission.set_mission("Upgrade Tower")
                     for turret in turret_group:
                         turret.delete_turret()
                     game_map.level += 1
-                    ui.show_popup("To już ostatnia linia obrony. Jeśli ją stracimy, wszystko przepada. Zyskaliśmy trochę czasu dzięki rakietowym wieżyczkom, ale wróg rzuca wszystko, co ma. Przygotujcie się – nie będzie odwrotu.")
+                    plot.draw("To już ostatnia linia obrony. Jeśli ją stracimy, wszystko przepada. Zyskaliśmy trochę czasu dzięki rakietowym wieżyczkom, ale wróg rzuca wszystko, co ma. Przygotujcie się – nie będzie odwrotu.")
                 elif game_map.level == 3:
-                    ui.set_mission("Upgrade Tower")
+                    mission.set_mission("Upgrade Tower")
                     game_over = True
                     game_outcome = 1
-                    ui.show_popup("Udało się. Obroniliśmy bazę, a wróg się wycofuje. Straty są duże, ale pokazaliśmy, że nie damy się złamać. Teraz my przechodzimy do ataku.")
+                    plot.draw("Udało się. Obroniliśmy bazę, a wróg się wycofuje. Straty są duże, ale pokazaliśmy, że nie damy się złamać. Teraz my przechodzimy do ataku.")
                 else:
                     ENEMY_SPAWN_DATA[3]["normal"]+=1
                     ENEMY_SPAWN_DATA[3]["heavy"]+=1
@@ -211,6 +208,7 @@ def main(game_mode):
 
             if upgrade_button.is_clicked(event) and selected_turret and selected_turret.upgrade_turret < cs.TURRET_MAX_LEVEL and not placing_turrets and game_map.money >= cs.UPGRADE_COST:
                 selected_turret.upgrade()
+                game_logger.log(f"Upgraded turret at {selected_turret.tile_pos} to level {selected_turret.upgrade_turret}","info")
                 game_map.money -= cs.UPGRADE_COST
             
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1 and placing_turrets:
@@ -228,6 +226,9 @@ def main(game_mode):
                     dragged_turret_image = Turret((0, 0), selected_turret_type).image
 
             if event.type == pg.KEYDOWN:
+                
+                if event.key == pg.K_BACKQUOTE:  # ` key
+                    game_logger.display.toggle()
                 if event.key == pg.K_1:
                     selected_turret_type = "tower_1"
                     placing_turrets = True
@@ -256,7 +257,10 @@ def main(game_mode):
                         if tile.tile_type == 'grass' and not any(t.tile_pos == tile_pos for t in turret_group) and game_map.money >= cs.BUY_COST:
                             turret = Turret(tile_center, selected_turret_type, tile_pos)
                             turret_group.add(turret)
+                            game_logger.log(f"Placed {selected_turret_type} at {tile_pos}","info")
                             game_map.money -= cs.BUY_COST
+                        else:
+                            game_logger.log(f"Invalid turret placement attempt at {tile_pos}","warning")
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = pg.mouse.get_pos()
@@ -278,13 +282,15 @@ def main(game_mode):
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1 and dragging_turret:
                 mouse_pos = pg.mouse.get_pos()
                 tile = game_map.get_tile_at_position(mouse_pos[0], mouse_pos[1])
-                if tile and tile.tile_type == 'grass':
-                    tile_center = tile.rect.center
-                    tile_pos = (tile.rect.x // cs.TILE_SIZE, tile.rect.y // cs.TILE_SIZE)
-                    if not any(t.tile_pos == tile_pos for t in turret_group) and game_map.money >= cs.BUY_COST:
-                        turret = Turret(tile_center, selected_turret_type, tile_pos)
-                        turret_group.add(turret)
-                        game_map.money -= cs.BUY_COST
+                tile_center = tile.rect.center
+                tile_pos = (tile.rect.x // cs.TILE_SIZE, tile.rect.y // cs.TILE_SIZE)
+                if tile.tile_type == 'grass' and not any(t.tile_pos == tile_pos for t in turret_group) and game_map.money >= cs.BUY_COST:
+                    turret = Turret(tile_center, selected_turret_type, tile_pos)
+                    turret_group.add(turret)
+                    game_logger.log(f"Placed {selected_turret_type} at {tile_pos}","info")
+                    game_map.money -= cs.BUY_COST
+                else:
+                    game_logger.log(f"Invalid turret placement attempt at {tile_pos}","warning")
                 dragging_turret = False
                 dragged_turret_image = None
 
@@ -292,14 +298,19 @@ def main(game_mode):
             mouse_x, mouse_y = pg.mouse.get_pos()
             img_rect = dragged_turret_image.get_rect(center=(mouse_x, mouse_y))
             screen.blit(dragged_turret_image, img_rect)
-
+        
+        game_logger.display.draw(screen, font, 10, game_map.height * cs.TILE_SIZE - 250,game_map.width*cs.TILE_SIZE)
         pg.display.flip()
 
     pg.quit()
 
 if __name__ == "__main__":
+    pg.init()
+    font = pg.font.SysFont(None, 36)
     game_mode = show_mode_selection_menu()
+    game_map = Map()
+    mission=MissionManager()
     if game_mode is not None:
-        main(game_mode)
+        main(game_mode,game_map,mission)
     else:
         pg.quit()
