@@ -1,4 +1,3 @@
-# enemies.py
 import pygame as pg
 from map import Map
 from pathfinding import a_star_search
@@ -7,17 +6,19 @@ from enemy_data import ENEMY_DATA
 import constant as cs
 
 class Enemy(pg.sprite.Sprite):
+    enemy_images={}
+    
     def __init__(self, map_obj,enemy_type):
         pg.sprite.Sprite.__init__(self)
+        Enemy.load_enemy_images()
+        self.image = Enemy.enemy_images.get(enemy_type)
         self.map = map_obj
-        self.hp=ENEMY_DATA.get(enemy_type)["hp"]
-        self.speed = ENEMY_DATA.get(enemy_type)["speed"]
-        self.enemy_images={}
-        self.load_enemy_images()
+        enemy_stats=ENEMY_DATA[enemy_type]
+        self.hp=enemy_stats["hp"]
+        self.speed = enemy_stats["speed"]
         self.path = []
         self.current_target = None
         self.current_path_index = 0
-        self.image = self.enemy_images.get(enemy_type)
         self.rect = self.image.get_rect()
         self.original_image = self.image.copy()
         self.enemy_type=enemy_type
@@ -35,8 +36,9 @@ class Enemy(pg.sprite.Sprite):
             )
             
             # Calculate path
-            self.calculate_path(map_obj)
+            self.calculate_path()
     
+    @classmethod
     def load_enemy_images(self):
         # Load all enemy images from your tiles directory
         enemy_types = ['normal','heavy','fast','boss']
@@ -60,15 +62,15 @@ class Enemy(pg.sprite.Sprite):
         return None
     
     
-    def calculate_path(self,map):
+    def calculate_path(self):
         """Calculate a path from start to finish"""
         if self.start_pos and self.finish_pos:
             self.path = a_star_search(self.map, self.start_pos, self.finish_pos,self.enemy_type)
             self.current_path_index = 0
             if self.path:
-                self.set_next_target(map)
+                self.set_next_target()
     
-    def set_next_target(self,map):
+    def set_next_target(self):
         """Set the next target position from the path"""
         if self.current_path_index < len(self.path):
             next_tile = self.path[self.current_path_index]
@@ -78,70 +80,45 @@ class Enemy(pg.sprite.Sprite):
             )
             self.current_path_index += 1
         else:
-            map.hp-=1
-            map.enemies_missed+=1
+            self.map.hp-=1
+            self.map.enemies_missed+=1
             self.kill()
-    
-    def move(self,map):
+   
+    def move(self):
         """Move towards the current target"""
         if self.current_target:
-            dx = self.current_target[0] - self.rect.centerx
-            dy = self.current_target[1] - self.rect.centery
-            
-            # Calculate direction
-            distance = max(1, (dx**2 + dy**2)**0.5)  # Avoid division by zero
-            # current_tile = map.tiles[self.current_path_index - 1][0], map.tiles[self.current_path_index - 1][1]
-            # movement_multiplier = 1.0
-            
-            # # Slow down non-fast enemies on marsh tiles
-            # if current_tile.tile_type == 'marsh' and self.enemy_type != 'fast':
-            #     movement_multiplier = 0.5
+            direction = pg.math.Vector2(self.current_target) - pg.math.Vector2(self.rect.center)
+            distance = direction.length()
+            if distance != 0:
+                direction.normalize_ip()
+
             current_tile_x, current_tile_y = self.path[self.current_path_index - 1]
-            current_tile = map.tiles[current_tile_y][current_tile_x]
-            
+            current_tile = self.map.tiles[current_tile_y][current_tile_x]
+
             movement_multiplier = 1.0
-            
-            # Slow down non-fast enemies on marsh tiles
             if current_tile.tile_type == 'marsh' and self.enemy_type != 'fast':
                 movement_multiplier = 0.5
-            
-            # Adjust movement
-            dx = dx / distance * self.speed * movement_multiplier
-            dy = dy / distance * self.speed * movement_multiplier
-            
-            self.rotate()
+
             # Move
-            self.rect.x += dx
-            self.rect.y += dy
-            
-            
-            # Check if reached target
-            if abs(self.rect.centerx - self.current_target[0]) < self.speed and \
-               abs(self.rect.centery - self.current_target[1]) < self.speed:
-                # Snap to target position
-                self.rect.center = self.current_target
-                # Set next target
-                self.set_next_target(map)
-    
-    def rotate(self):
-        #Rotate the enemy to face the direction of movement
-        if self.current_target:
-            # Calculate direction vector
-            dx = self.current_target[0] - self.rect.centerx
-            dy = self.current_target[1] - self.rect.centery
+            movement = direction * self.speed * movement_multiplier
             
             # Calculate angle in radians and convert to degrees
-            angle = math.degrees(math.atan2(-dy, dx))
+            angle = math.degrees(math.atan2(-direction.y, direction.x))
+            self.image = pg.transform.rotate(self.original_image, angle)
+            # Update rect to maintain the center position
+            self.rect = self.image.get_rect(center=self.rect.center)
             
-            if hasattr(self, 'original_image'):
-                # Rotate the original image to avoid quality loss from multiple rotations
-                self.image = pg.transform.rotate(self.original_image, angle)
-                # Update rect to maintain the center position
-                self.rect = self.image.get_rect(center=self.rect.center)
+            self.rect.x += movement.x
+            self.rect.y += movement.y
+
+            if pg.math.Vector2(self.rect.center).distance_to(self.current_target) < self.speed:
+                 self.rect.center = self.current_target
+                 self.set_next_target()
+   
     
-    def update(self,map):
-        self.move(map)
+    def update(self):
+        self.move()
         if self.hp <=0:
-            map.enemies_killed+=1
-            map.money+=cs.KILL_REWARD
+            self.map.enemies_killed+=1
+            self.map.money+=cs.KILL_REWARD
             self.kill()

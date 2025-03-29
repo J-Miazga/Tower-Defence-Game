@@ -8,15 +8,16 @@ class Tile(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.tile_type = tile_type
-    def get_movement_cost(self):
-        # Different terrain types have different movement costs
+    def get_movement_cost(self,enemy_type):
         costs = {
-            'path': 1.0,      # Normal movement
-            'start': 1.0,     # Normal movement at start
-            'finish': 1.0,    # Normal movement at finish
-            'marsh': 2.0,     # Slower through marsh
-            'grass': float('inf'),  # Cannot move on grass
-            'forest': float('inf'), # Cannot move on forest
-            'mountain': float('inf')  # Cannot move on mountain
+            'path': 1.0,     
+            'start': 1.0,     
+            'finish': 1.0,    
+            'marsh': 2.0,     
+            'grass': float('inf'),  
+            'forest': float('inf'), 
+            'mountain': float('inf')  
         }
+        if self.tile_type == 'marsh' and enemy_type == 'fast':
+            return 1.0
         return costs.get(self.tile_type, float('inf'))
