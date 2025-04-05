@@ -95,9 +95,10 @@ In this game, the player defends their base by strategically placing and upgradi
 ### Run the Game
 ```bash
 python main.py
+```
 
-
-### Controls
+---
+## Controls
 - **Mouse**: UI interactions and turret placement
 - **W/A/S/D**: Move tile selector when using keyboard placement
 - **1/2/3**: Select turret type
