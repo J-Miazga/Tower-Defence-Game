@@ -11,26 +11,30 @@ from logger import game_logger
 from config_dialog import get_config, select_save_source
 from save_and_load import json_manager,xml_manager,mongodb_manager
 
-#cd "C:\Program Files\MongoDB\Server\8.0\bin"
-#mongod --dbpath="C:\MojFolder\Studia\Semestr_6\WNO2\lab6\data"
 
 def show_start_menu():
+    # Create and configure the Pygame window for the start menu
     screen = pg.display.set_mode((400, 300))
     pg.display.set_caption("Start Menu")
     font = pg.font.SysFont("Consolas", 32)
     clock = pg.time.Clock()
 
+    # Define buttons for "Start New Game" and "Continue"
     start_button = pg.Rect(100, 100, 200, 50)
     continue_button = pg.Rect(100, 180, 200, 50)
 
     while True:
         screen.fill("lightgray")
+
+        # Draw the buttons
         pg.draw.rect(screen, "green", start_button, border_radius=8)
         pg.draw.rect(screen, "dodgerblue", continue_button, border_radius=8)
 
+        # Render button labels
         start_text = font.render("Start New Game", True, "white")
         continue_text = font.render("Continue", True, "white")
 
+        # Blit text centered in each button
         screen.blit(start_text, start_text.get_rect(center=start_button.center))
         screen.blit(continue_text, continue_text.get_rect(center=continue_button.center))
 
@@ -39,14 +43,12 @@ def show_start_menu():
                 pg.quit()
                 exit()
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                # If "Start New Game" clicked, return the action
                 if start_button.collidepoint(event.pos):
                     return "new"
+                # If "Continue" clicked, open file format selection and load accordingly
                 elif continue_button.collidepoint(event.pos):
-                    # Sprawdź czy plik istnieje
-                    #save_data = json_manager.load()
-                    #save_data = mongodb_manager.load()
-                    #save_data = xml_manager.load()  # lub XMLSaveManager()
-                    save_source = select_save_source()
+                    save_source = select_save_source()  # Prompt user to choose save format
 
                     if save_source == "json":
                         save_data = json_manager.load()
@@ -54,54 +56,62 @@ def show_start_menu():
                         save_data = xml_manager.load()
                     elif save_source == "mongo":
                         save_data = mongodb_manager.load()
-                    
+
+                    # If data is loaded successfully, return it with "continue"
                     if save_data:
                         return "continue", save_data
                     else:
                         print("No save file found.")
-                        return "new"
+                        return "new"  # fallback to new game if no save found
 
         pg.display.flip()
-        clock.tick(30)
+        clock.tick(30)  # Limit to 30 FPS
+
 
 def load_game_progress(game_map, save_data):
-    game_map.level = save_data.get("level", 1)
-    game_map.hp = save_data.get("hp", cs.HEALTH)
-    game_map.money = save_data.get("money", cs.MONEY)
+    # Restore saved game state into the map object
+    game_map.level = save_data.get("level", 1)          # Set the saved level (default 1)
+    game_map.hp = save_data.get("hp", cs.HEALTH)        # Restore health or use default
+    game_map.money = save_data.get("money", cs.MONEY)   # Restore money or use default
 
-    # Przywrócenie wieżyczek (zwracamy je, żeby main je ustawił)
-    turrets_to_restore = save_data.get("turrets", [])
-    
-    # Jeśli endless mode, ustaw falę i przeciwników
+    turrets_to_restore = save_data.get("turrets", [])   # Retrieve list of turrets to restore
+
+    # If it's endless mode (level 4), load wave and enemy data
     if game_map.level == 4:
         wave = save_data.get("wave", 0)
         enemy_wave = save_data.get("enemy_data", {})
-        LEVEL_DATA[4]["wave"] = wave
-        ENEMY_SPAWN_DATA[3].update(enemy_wave)
+        LEVEL_DATA[4]["wave"] = wave                    # Restore current wave count
+        ENEMY_SPAWN_DATA[3].update(enemy_wave)          # Update enemy counts for spawning
 
-    # Wczytaj mapę na podstawie poziomu
+    # Determine which map file to load based on level
     map_file = "maps/endless_level.txt" if game_map.level == 4 else f"maps/level{game_map.level}.txt"
-    map_loaded = game_map.load_from_file(map_file)
+    map_loaded = game_map.load_from_file(map_file)      # Load the corresponding map
 
-    return turrets_to_restore, map_loaded
+    return turrets_to_restore, map_loaded               # Return turret data and map loading status
+
 
 
 def collect_save_data_json(game_map, turret_group):
+    # Prepare a dictionary containing all necessary game state data for saving
     return {
-        "level": game_map.level,
-        "hp": game_map.hp,
-        "money": game_map.money,
+        "level": game_map.level,             # Current level of the game
+        "hp": game_map.hp,                   # Player's current health
+        "money": game_map.money,             # Current in-game currency
+
+        # Save data for all turrets on the map
         "turrets": [
             {
-                "x": t.rect.centerx,
-                "y": t.rect.centery,
-                "type": t.tower_type,
-                "level": t.upgrade_turret
+                "x": t.rect.centerx,         # X coordinate of the turret
+                "y": t.rect.centery,         # Y coordinate of the turret
+                "type": t.tower_type,        # Type of turret (e.g., tower_1)
+                "level": t.upgrade_turret    # Upgrade level of the turret
             } for t in turret_group
         ],
-        "wave": LEVEL_DATA.get(4, {}).get("wave", 0),
-        "enemy_data": ENEMY_SPAWN_DATA[3]  # for endless mode
+
+        "wave": LEVEL_DATA.get(4, {}).get("wave", 0),   # Current wave number (for endless mode)
+        "enemy_data": ENEMY_SPAWN_DATA[3]               # Number of enemies per type for endless mode
     }
+
 
 # Draws text onto the screen at a specified position
 def draw_text(text, font, text_col, x, y, surface):
@@ -132,47 +142,56 @@ def load_level(level):
         return False
 
 def restore_turrets_from_data(turrets_data, turret_group):
-    from turrets import Turret  # Import lokalny, jeśli nie chcesz go mieć na górze pliku
+    from turrets import Turret  # Import the Turret class
 
+    # Recreate turret instances based on saved data
     for turret_info in turrets_data:
         turret = Turret(
-            (turret_info["x"], turret_info["y"]),
-            turret_info["type"]
+            (turret_info["x"], turret_info["y"]),  # Set position
+            turret_info["type"]                    # Set turret type
         )
-        turret.upgrade_turret = turret_info["level"]
-        turret_group.add(turret)
+        turret.upgrade_turret = turret_info["level"]  # Restore upgrade level
+        turret_group.add(turret)  # Add turret to the turret group
+
 
 
 def show_mode_selection_menu():
+    # Create a small window for the game mode selection menu
     menu_screen = pg.display.set_mode((400, 400))
     pg.display.set_caption("Game Mode Selection")
 
+    # Define fonts for title and buttons
     title_font = pg.font.SysFont("Consolas", 36, bold=True)
     button_font = pg.font.SysFont("Consolas", 24)
 
+    # Create buttons for Endless and Story (Plot) modes
     endless_button = Button(100, 150, 200, 50, "Endless Mode", button_font)
     plot_button = Button(100, 220, 200, 50, "Story Mode", button_font)
 
-
+    # Menu event loop
     while True:
-        menu_screen.fill("grey100")
+        menu_screen.fill("grey100")  # Fill background color
         draw_text("Select Game Mode", title_font, "black", 50, 50, menu_screen)
 
+        # Draw mode selection buttons
         endless_button.draw(menu_screen)
         plot_button.draw(menu_screen)
 
-
+        # Handle events
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                # Exit the game if the user closes the window
                 pg.quit()
                 return None, None
 
+            # Return selected game mode
             if endless_button.is_clicked(event):
                 return 'endless', None
 
             if plot_button.is_clicked(event):
                 return 'plot', None
 
+        # Update display
         pg.display.flip()
 
 
@@ -259,6 +278,7 @@ def handle_level_progression(game_map, turret_group, mission, plot):
         ENEMY_SPAWN_DATA[3]["fast"] += 1
 
     game_map.generate_enemy_list()
+    # Saves to different formats
     json_manager.save(collect_save_data_json(game_map,turret_group))
     xml_manager.save(collect_save_data_json(game_map,turret_group))
     mongodb_manager.save(collect_save_data_json(game_map,turret_group))
@@ -298,6 +318,7 @@ def main(game_mode, game_map, mission,save_data=None):
     game_map.generate_enemy_list()
     enemy_group = pg.sprite.Group()
     turret_group = pg.sprite.Group()
+    # Add turrets from previous save
     if game_mode == 'continue' and save_data:
         restore_turrets_from_data(turrets_to_restore, turret_group)
 
@@ -478,25 +499,38 @@ def main(game_mode, game_map, mission,save_data=None):
     pg.quit()
 # === ENTRY POINT ===
 if __name__ == "__main__":
+    # Initialize Pygame and set the default font
     pg.init()
     font = pg.font.SysFont(None, 36)
    
+    # Show initial menu: "Start New Game" or "Continue"
     choice = show_start_menu()
 
+    # If user selected "Continue", extract saved game mode and data
     if isinstance(choice, tuple) and choice[0] == "continue":
         game_mode = "continue"
         save_data = choice[1]
     else:
+        # Otherwise, get game configuration via Tkinter dialog
         config = get_config()
         if config:
+            # Save configuration to all supported formats (JSON, XML, MongoDB)
             json_manager.save({"config": config})
             mongodb_manager.save({"config": config})
-            xml_manager.save({"config": config})  # zapisujemy konfigurację
-            game_mode, save_data= show_mode_selection_menu()  
+            xml_manager.save({"config": config})
+
+            # Let user choose game mode (Endless or Plot)
+            game_mode, save_data = show_mode_selection_menu()
         else:
+            # Exit if config dialog was cancelled
             pg.quit()
             exit()
+
+    # Initialize core game components
     game_map = Map()
     mission = MissionManager()
+
+    # Launch the main game loop with chosen mode and saved data (if any)
     main(game_mode, game_map, mission, save_data)
+
     
