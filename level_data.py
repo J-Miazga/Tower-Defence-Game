@@ -32,5 +32,8 @@ LEVEL_DATA = {
         ),
         "end_game": True,              # Marks the end of the game
         "set_mission": "Upgrade Tower"
+    },
+    4: {
+      "wave":0  
     }
 }

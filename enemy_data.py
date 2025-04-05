@@ -24,7 +24,6 @@ ENEMY_SPAWN_DATA = [
         "normal": 10,  # Endless wave template (used repeatedly)
         "heavy": 0,
         "fast": 0,
-        "boss": 0,
     }
 ]
 
